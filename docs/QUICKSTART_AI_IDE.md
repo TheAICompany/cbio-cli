@@ -1,47 +1,58 @@
-# 30-Second Quickstart: Claude Code & Cursor
+# AI IDE Quickstart
 
-Use your AI IDE with API keys stored in the vault. You do a few one-time steps; the LLM works normally afterward.
+Use this flow when you want Claude Code or Cursor to call provider APIs through a local CBIO proxy instead of storing raw API keys in IDE settings.
 
-## Human steps (one-time)
+## One-Time Setup
 
-### 1. Install and init
+### 1. Install the CLI and create an identity
 
 ```bash
 npm install -g @the-ai-company/cbio-cli
-npx cbio-identity init
+cbio init
 ```
 
-Save the Private Key. Set `AGENT_PRIV_KEY` in your environment (e.g. `export AGENT_PRIV_KEY=...`) before running `tui` or `proxy`.
-
-### 2. Add secret to vault
+If you do not want to install globally, use:
 
 ```bash
-cbio-identity tui
+npx @the-ai-company/cbio-cli init
 ```
 
-Add a secret (e.g. `anthropic` for Claude, `openai` for OpenAI). Paste your API key when prompted.
+Save the private key, then export it:
 
-### 3. Start the proxy
-
-**For Anthropic (Claude):**
 ```bash
-cbio-identity proxy https://api.anthropic.com anthropic
+export AGENT_PRIV_KEY=your_private_key_here
 ```
 
-**For OpenAI:**
+### 2. Add a provider secret to the vault
+
 ```bash
-cbio-identity proxy https://api.openai.com openai
+cbio tui
 ```
 
-Note the **Base URL** printed (e.g. `http://127.0.0.1:54321`). Keep this terminal running.
+Recommended secret names:
 
-### 4. Point your IDE at the proxy
+- `anthropic` for Anthropic / Claude
+- `openai` for OpenAI
 
----
+### 3. Start the local proxy
+
+For Anthropic:
+
+```bash
+cbio proxy https://api.anthropic.com anthropic
+```
+
+For OpenAI:
+
+```bash
+cbio proxy https://api.openai.com openai
+```
+
+Keep that terminal running. The command prints a local `Base URL` such as `http://127.0.0.1:54321`.
 
 ## Claude Code
 
-Add to `~/.claude/settings.json`:
+Add this to `~/.claude/settings.json`:
 
 ```json
 {
@@ -52,19 +63,28 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-Replace `YOUR_PORT` with the port from the proxy output. The proxy injects the real key from the vault.
-
----
+Replace `YOUR_PORT` with the port shown by `cbio proxy`.
 
 ## Cursor
 
-1. Open **Settings** → **Models**
-2. For **Anthropic**: Enable "Override Anthropic Base URL", set to `http://127.0.0.1:YOUR_PORT`
-3. For **OpenAI**: Enable "Override OpenAI Base URL", set to `http://127.0.0.1:YOUR_PORT/v1`
-4. Use a placeholder API key (e.g. `unused`); the proxy injects the real one.
+Open `Settings -> Models` and set:
 
----
+- Anthropic base URL override to `http://127.0.0.1:YOUR_PORT`
+- OpenAI base URL override to `http://127.0.0.1:YOUR_PORT/v1`
+- API key to any placeholder value such as `unused`
 
-## After setup
+## What Happens After Setup
 
-Use Claude Code or Cursor as usual. The proxy forwards requests and injects auth from the vault. Your API key never appears in IDE config or logs.
+Your IDE keeps talking to an OpenAI- or Anthropic-compatible endpoint, but the local CBIO proxy injects the real credential from the vault on outbound requests.
+
+That means:
+
+- the real API key does not live in IDE config
+- the real API key does not need to be copied into prompts
+- secret rotation happens in the vault, not in every tool config
+
+## Troubleshooting
+
+- If `tui` or `proxy` prompts for a key, `AGENT_PRIV_KEY` is not set in the current shell.
+- If the IDE cannot connect, confirm the proxy process is still running.
+- If requests fail with auth errors, verify the secret name you passed to `proxy` matches the name stored in the vault.

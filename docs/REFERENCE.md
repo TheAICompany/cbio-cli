@@ -1,112 +1,77 @@
-# CBIO SDK Deep Reference
+# CLI Reference
 
-This document provides a comprehensive technical reference for the CBIO SDK, covering advanced API usage, custom storage implementation, and structured error handling.
+Use this page when you want the exact behavior of each `cbio` command.
 
-For high-level concepts and quick start, see [README.md](../README.md). For governance and introspection, see [CAPABILITIES.md](../CAPABILITIES.md).
+For overview and first-time setup, see [README.md](../README.md). For Claude Code and Cursor setup, see [QUICKSTART_AI_IDE.md](./QUICKSTART_AI_IDE.md).
 
----
+Installable package: `@the-ai-company/cbio-cli`
 
-## 1. Advanced Identity APIs
+Local binary name: `cbio`
 
-These methods are available under `identity.admin.vault`, `identity.admin.managedAgents`, or `identity.admin.children` and are intended for administrative or high-privilege bootstrap logic.
+## Core Commands
 
-### 1.1 Vault Synchronization & Merging
-- **`identity.admin.vault.mergeFrom(otherIdentity, options?)`**: Atomically merges secrets from another vault.
-  - `onConflict`: `'abort'` (default), `'skip'`, or `'overwrite'`.
-  - Throws `MERGE_IDENTITY_MISMATCH` if root identities differ.
+### `cbio init`
 
-### 1.2 Backups & Sealing
-- **`identity.admin.vault.seal(kdk: string): string`**: Exports the entire vault as an encrypted blob.
-- **`identity.admin.vault.loadFromSealedBlob(kdk: string, blob: string)`**: Restores a vault from a sealed backup.
+Creates a new identity, prints the public key, private key, and root agent ID, then checks that the vault path is writable.
 
-### 1.3 Audit & Lifecycle
-- **`identity.admin.vault.getActivityLog()`**: Returns a read-only list of all vault-authenticated actions.
-- **`identity.admin.managedAgents.revokeManagedAgent(publicKey, reason?)`**: Permanently revokes a child identity.
-- **`identity.admin.managedAgents.getManagedAgentCapabilities(publicKey)`**: Inspects the signed privileges of a sub-identity.
+Output includes:
 
-### 1.4 Recursive Child Identity Management
-When a child is registered via `registerChildIdentity(keys)`, its key material is stored in the parent vault. To load it later:
-```ts
-const secretName = getChildIdentitySecretName(childPublicKey);
-const stored = identity.admin.vault.getSecret(secretName);
-if (stored) {
-  const { privateKey, publicKey } = JSON.parse(stored);
-  const childIdentity = await CbioIdentity.load({ privateKey, publicKey });
-}
-```
+- `Public Key`
+- `Private Key`
+- `Agent ID`
+- vault path writability result
 
----
+### `cbio tui`
 
-## 2. Storage Customization
+Opens the interactive vault manager. You can:
 
-The SDK can run on any backend by implementing the `IStorageProvider` interface.
+- list secrets
+- add secrets
+- read secrets
+- delete secrets
+- inspect recent activity log entries
 
-### 2.1 Interface Definition
-```ts
-export interface IStorageProvider {
-  read(key: string): Promise<Uint8Array | null>;
-  write(key: string, data: Uint8Array): Promise<void>;
-  delete(key: string): Promise<void>;
-  has(key: string): Promise<boolean>;
-  rename?(from: string, to: string): Promise<void>; // Improves atomic writes
-}
-```
+If `AGENT_PRIV_KEY` is not set, `cbio` prompts for it.
 
-### 2.2 Pre-built Providers
-- **`MemoryStorageProvider`**: Ephemeral storage for testing or in-memory caches.
-- **Filesystem (Default)**: Persists to `~/.c-bio/`. Use `C_BIO_VAULT_DIR` environment variable to override.
+### `cbio proxy <upstream-url> [secret-name]`
 
----
+Starts a local proxy that forwards requests to `upstream-url` and injects auth from the named secret.
 
-## 3. Advanced Request Patterns
+Details:
 
-### 3.1 Custom Fetch for SDKs (OpenAI/Anthropic)
-If a third-party SDK supports a custom `fetch` implementation, use `createFetchWithAuth`. This keeps the vault boundary while using the official client.
-```ts
-const openai = new OpenAI({
-  fetch: agent.createFetchWithAuth('openai'),
-});
-```
+- `secret-name` defaults to `default`
+- `C_BIO_PROXY_PORT` can pin the local port
+- the upstream URL must be `http://` or `https://`
+- if `AGENT_PRIV_KEY` is missing, `cbio` prompts for it before startup
 
-### 3.2 Complex HTTP Calls
-Use full request options for `fetchWithAuth`:
-```ts
-const response = await agent.fetchWithAuth('my-secret', 'https://api.example.com', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ key: 'value' }),
-  authPrefix: 'Token ', // Optional: default is 'Bearer '
-  withSignature: true,  // Optional: adds X-CBIO-Signature
-});
-```
+## Auxiliary Commands
 
----
+### `cbio agent-id`
 
-## 3. Error Code Dictionary
+Prints the root agent ID for the private key in `AGENT_PRIV_KEY`. If `AGENT_PRIV_KEY` is missing, `cbio` prompts for the key.
 
-The SDK uses structured `IdentityError` objects with the following codes:
+### `cbio get <secret-name>`
 
-| Code | Meaning | Typical Fix / Recovery |
-| :--- | :--- | :--- |
-| `PERMISSION_DENIED` | Handle lacks the required runtime capability. | Check `agent.can()` before calling. |
-| `SECRET_NOT_FOUND` | Secret name does not exist in the vault. | Add it first or check the naming. |
-| `SECRET_ALREADY_EXISTS` | `addSecret` used on an existing name. | Use a new name or `update`. |
-| `SECRET_POLICY_REQUIRED` | Agent rotation attempted without allowed origins. | Set origins in identity code. |
-| `SECRET_SOURCE_ORIGIN_MISMATCH` | Rotation came from a disallowed origin. | Check secret policy and rotation URL. |
-| `VAULT_PERSISTENCE_FAILED` | Storage is not writable. | Fix permissions or check storage path. |
-| `VAULT_FILE_NOT_FOUND` | Expected vault file does not exist. | Initialize identity or check storage key. |
-| `VAULT_WRITE_INTEGRITY_FAILED` | Save verification failed. | Check disk space/integrity. |
-| `VAULT_CORRUPTED` | Vault file is truncated or unreadable. | Restore from backup; do not overwrite. |
-| `VAULT_DECRYPT_FAILED` | Decryption failed (wrong key or tampered). | Verify the correct Private Key was used. |
-| `MERGE_IDENTITY_MISMATCH` | Tried to merge vaults of different identities. | Only merge vaults of the same identity. |
-| `CHILD_IDENTITY_REQUIRES_PRIVATE_KEY` | Child keys were incomplete on registration. | Ensure child keys include Private Key. |
-| `SIGNER_REQUIRES_PRIVATE_KEY` | Administrative action requires a full signer. | Load identity from a full private key. |
+Prints a secret in plaintext. This is a last-mile admin/debug command, not the normal way to connect tools.
 
----
+### `cbio delete <secret-name>`
 
-## 5. CLI & Broker Mode
-The `cbio-identity` binary provides administrative tools and a local auth broker.
+Deletes a secret after explicit confirmation.
 
-- `cbio-identity init`: Provision a new root identity.
-- `cbio-identity get/delete <name>`: Plaintext management (requires `AGENT_PRIV_KEY`).
-- `cbio-identity proxy <upstream-url> [secret-name]`: Starts a loopback-only proxy that forwards requests to the given upstream URL. Useful for SDKs that do not support custom fetch.
+## Environment Variables
+
+- `AGENT_PRIV_KEY`: private key used to unlock or administer the vault
+- `C_BIO_PROXY_PORT`: optional fixed local port for `proxy`
+- `C_BIO_VAULT_DIR`: optional vault storage directory override
+
+## Storage and Paths
+
+- default vault storage is under `~/.c-bio/`
+- `cbio tui` checks whether the vault already exists and reports whether it loaded or created the vault
+- `C_BIO_VAULT_DIR` changes where vault files are read and written
+
+## Practical Notes
+
+- `get` prints plaintext, so treat it as a last-mile admin command rather than a normal integration method
+- `delete` is destructive and requires confirmation
+- `proxy` is the easiest path for tools that expect a base URL plus placeholder API key

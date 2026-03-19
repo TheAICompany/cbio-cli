@@ -1,10 +1,10 @@
 {
   "name": "@the-ai-company/cbio-cli",
-  "version": "0.24.0",
-  "description": "Identity and credential vault SDK for AI agents. Store secrets securely and make authenticated requests without exposing plaintext keys.",
+  "version": "0.26.0",
+  "description": "1 password CLI for your AI agent team. Local vault management, and auth proxy workflows.",
   "type": "module",
   "bin": {
-    "cbio-identity": "./dist/cli.js"
+    "cbio": "./dist/cli.js"
   },
   "files": [
     "dist/",
@@ -19,8 +19,8 @@
   "scripts": {
     "build": "node ./scripts/clean-dist.mjs && tsc",
     "prepare": "npm run build",
-    "test": "npm run build && npm run test:acceptance",
-    "test:acceptance": "node tests/runtime/derivation.js && node tests/runtime/errors.js && node tests/runtime/hardened_vault.js && node tests/runtime/isolation_local.js && node tests/runtime/managed_agent_identity.js && node tests/runtime/merge_security_local.js && node tests/runtime/recursive_cbio.js && node tests/runtime/register_child.js && node tests/runtime/transparency.js && node tests/runtime/vault_resilience.js && node tests/runtime/activity_log.js && node tests/runtime/secret_rotation_policy.js && node tests/runtime/local_auth_proxy.js && node tests/storage/adaptability.js && node tests/runtime/autosave.js"
+    "test": "npm run build && npm run test:unit",
+    "test:unit": "node --test tests/**/*.test.mjs"
   },
   "keywords": [
     "claw-biometric",

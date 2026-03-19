@@ -6,11 +6,10 @@
 
 import * as fs from 'node:fs/promises';
 import * as readline from 'node:readline/promises';
-import { CbioIdentity } from '@the-ai-company/cbio-node-runtime';
+import { CbioIdentity, derivePublicKey } from '@the-ai-company/cbio-node-runtime';
 import { getVaultPath } from '@the-ai-company/cbio-node-runtime/protocol';
-import { derivePublicKey } from '@the-ai-company/cbio-protocol';
-import { readSecretNoEcho } from './readSecret.js';
-import { selectFromMenu } from './selectFromMenu.js';
+import { readSecretNoEcho } from '../../lib/terminal/readSecret.js';
+import { selectFromMenu } from '../../lib/terminal/selectFromMenu.js';
 import { runList, runAdd, runActivity } from './actions.js';
 
 export async function runTui(): Promise<void> {
