@@ -1,0 +1,46 @@
+{
+  "name": "@the-ai-company/cbio-cli",
+  "version": "0.24.0",
+  "description": "Identity and credential vault SDK for AI agents. Store secrets securely and make authenticated requests without exposing plaintext keys.",
+  "type": "module",
+  "bin": {
+    "cbio-identity": "./dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "docs/",
+    "examples/",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {
+    "@the-ai-company/cbio-node-runtime": "^0.33.0"
+  },
+  "scripts": {
+    "build": "node ./scripts/clean-dist.mjs && tsc",
+    "prepare": "npm run build",
+    "test": "npm run build && npm run test:acceptance",
+    "test:acceptance": "node tests/runtime/derivation.js && node tests/runtime/errors.js && node tests/runtime/hardened_vault.js && node tests/runtime/isolation_local.js && node tests/runtime/managed_agent_identity.js && node tests/runtime/merge_security_local.js && node tests/runtime/recursive_cbio.js && node tests/runtime/register_child.js && node tests/runtime/transparency.js && node tests/runtime/vault_resilience.js && node tests/runtime/activity_log.js && node tests/runtime/secret_rotation_policy.js && node tests/runtime/local_auth_proxy.js && node tests/storage/adaptability.js && node tests/runtime/autosave.js"
+  },
+  "keywords": [
+    "claw-biometric",
+    "agent",
+    "identity",
+    "vault",
+    "secrets",
+    "credentials",
+    "authentication",
+    "ed25519"
+  ],
+  "author": "The AI Company",
+  "homepage": "https://github.com/TheAICompany/cbio-id-sdk",
+  "repository": "github:TheAICompany/cbio-id-sdk",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
