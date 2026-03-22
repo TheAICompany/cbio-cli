@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createIdentityMaterial, deriveAgentIdFromPrivateKey } from '../../dist/application/identity.js';
+import {
+  createIdentityMaterial,
+  deriveAgentIdFromPrivateKey,
+  deriveOwnerIdFromPublicKey,
+  deriveVaultIdFromPublicKey,
+} from '../../dist/application/identity.js';
 
 test('createIdentityMaterial returns a matching derived agent id', () => {
   const identity = createIdentityMaterial();
@@ -12,5 +17,9 @@ test('createIdentityMaterial returns a matching derived agent id', () => {
   assert.ok(identity.privateKey.length > 0);
   assert.ok(identity.publicKey.length > 0);
   assert.ok(identity.agentId.length > 0);
+  assert.ok(identity.ownerId.length > 0);
+  assert.ok(identity.vaultId.length > 0);
   assert.equal(deriveAgentIdFromPrivateKey(identity.privateKey), identity.agentId);
+  assert.equal(deriveOwnerIdFromPublicKey(identity.publicKey), identity.ownerId);
+  assert.equal(deriveVaultIdFromPublicKey(identity.publicKey), identity.vaultId);
 });

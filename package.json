@@ -1,6 +1,6 @@
 {
   "name": "@the-ai-company/cbio-cli",
-  "version": "0.26.0",
+  "version": "0.27.0",
   "description": "1 password CLI for your AI agent team. Local vault management, and auth proxy workflows.",
   "type": "module",
   "bin": {
@@ -14,7 +14,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@the-ai-company/cbio-node-runtime": "^0.33.0"
+    "@the-ai-company/cbio-node-runtime": "^1.13.0"
   },
   "scripts": {
     "build": "node ./scripts/clean-dist.mjs && tsc",
@@ -37,8 +37,8 @@
   "repository": "github:TheAICompany/cbio-cli",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

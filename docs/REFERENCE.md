@@ -12,24 +12,33 @@ Local binary name: `cbio`
 
 ### `cbio init`
 
-Creates a new identity, prints the public key, private key, and root agent ID, then checks that the vault path is writable.
+Creates a new identity, prints the public key, private key, owner ID, agent ID, and vault ID, then checks that the vault path is writable.
+The output uses copy-friendly variable names: `AGENT_PUB_KEY`, `AGENT_PRIV_KEY`, `OWNER_ID`, `AGENT_ID`, and `VAULT_ID`.
+`OWNER_ID` is the owner identity derived from that keypair.
+`AGENT_ID` is the default agent identifier derived from the same keypair. It does not mean `cbio init` created a separate running agent instance.
+
+Security note: `cbio init` prints the private key to the terminal. Do not run it in terminals or IDEs that may record output history.
+After `cbio init` succeeds, save the private key immediately and close the current session as soon as you are done with it.
 
 Output includes:
 
-- `Public Key`
-- `Private Key`
-- `Agent ID`
+- `AGENT_PUB_KEY`
+- `AGENT_PRIV_KEY`
+- `OWNER_ID`
+- `AGENT_ID`
+- `VAULT_ID`
 - vault path writability result
 
 ### `cbio tui`
 
-Opens the interactive vault manager. You can:
+Opens the owner console. You can:
 
-- list secrets
-- add secrets
-- read secrets
-- delete secrets
-- inspect recent activity log entries
+- inspect the vault summary
+- list and add secrets
+- reveal current owner key material when needed
+- register agents
+- register HTTP capabilities for agents
+- inspect recent audit entries
 
 If `AGENT_PRIV_KEY` is not set, `cbio` prompts for it.
 
@@ -41,6 +50,9 @@ Details:
 
 - `secret-name` defaults to `default`
 - `C_BIO_PROXY_PORT` can pin the local port
+- if `C_BIO_PROXY_PORT` is not set, `cbio` asks the OS for an ephemeral local port and prints the chosen `Base URL`
+- outbound auth uses `Authorization: Bearer <secret>` by default
+- the incoming request path and query string are forwarded onto the upstream base URL
 - the upstream URL must be `http://` or `https://`
 - if `AGENT_PRIV_KEY` is missing, `cbio` prompts for it before startup
 
@@ -48,7 +60,7 @@ Details:
 
 ### `cbio agent-id`
 
-Prints the root agent ID for the private key in `AGENT_PRIV_KEY`. If `AGENT_PRIV_KEY` is missing, `cbio` prompts for the key.
+Prints the derived agent ID for the private key in `AGENT_PRIV_KEY`. If `AGENT_PRIV_KEY` is missing, `cbio` prompts for the key.
 
 ### `cbio get <secret-name>`
 
@@ -56,11 +68,11 @@ Prints a secret in plaintext. This is a last-mile admin/debug command, not the n
 
 ### `cbio delete <secret-name>`
 
-Deletes a secret after explicit confirmation.
+Not available in the runtime `1.13` public API. The command exits with an error.
 
 ## Environment Variables
 
-- `AGENT_PRIV_KEY`: private key used to unlock or administer the vault
+- `AGENT_PRIV_KEY`: private key for the identity used by the current shell or process; `cbio` uses it to unlock or administer that identity's vault
 - `C_BIO_PROXY_PORT`: optional fixed local port for `proxy`
 - `C_BIO_VAULT_DIR`: optional vault storage directory override
 
@@ -73,5 +85,5 @@ Deletes a secret after explicit confirmation.
 ## Practical Notes
 
 - `get` prints plaintext, so treat it as a last-mile admin command rather than a normal integration method
-- `delete` is destructive and requires confirmation
+- `delete` is currently unavailable because the runtime `1.13` public API does not expose secret deletion
 - `proxy` is the easiest path for tools that expect a base URL plus placeholder API key

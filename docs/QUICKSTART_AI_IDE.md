@@ -17,11 +17,16 @@ If you do not want to install globally, use:
 npx @the-ai-company/cbio-cli init
 ```
 
+Security note: do not run `cbio init` inside IDE terminals that may record terminal output. Run this step in a regular system terminal, save the private key, then export it into the shell you want to use.
+After `cbio init` succeeds, save the private key immediately and close that terminal session as soon as you are done with it.
+
 Save the private key, then export it:
 
 ```bash
 export AGENT_PRIV_KEY=your_private_key_here
 ```
+
+`AGENT_PRIV_KEY` is the private key for the identity used by the current shell or process.
 
 ### 2. Add a provider secret to the vault
 

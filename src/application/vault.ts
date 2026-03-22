@@ -1,9 +1,10 @@
-import type { CbioIdentity } from "@the-ai-company/cbio-node-runtime";
+import type { OwnerContext } from "./identity.js";
 
-export function getSecret(identity: CbioIdentity, secretName: string): string | undefined {
-  return identity.admin.vault.getSecret(secretName);
-}
-
-export async function deleteSecret(identity: CbioIdentity, secretName: string): Promise<void> {
-  await identity.admin.vault.deleteSecret(secretName);
+export async function exportSecretPlaintext(context: OwnerContext, secretName: string): Promise<string | undefined> {
+  try {
+    const exported = await context.owner.exportSecret({ alias: secretName });
+    return exported.plaintext;
+  } catch {
+    return undefined;
+  }
 }

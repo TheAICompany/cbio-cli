@@ -1,5 +1,6 @@
-import { loadIdentityFromEnvOrPrompt } from "../application/identity.js";
+import { loadOwnerContextFromEnvOrPrompt } from "../application/identity.js";
 import { resolveProxyPort, startProxy, validateUpstreamUrl } from "../application/proxy.js";
+import { exportSecretPlaintext } from "../application/vault.js";
 
 export async function runProxyCommand(rawUrl: string, secretName = "default"): Promise<void> {
   let upstreamBaseUrl: string;
@@ -13,8 +14,14 @@ export async function runProxyCommand(rawUrl: string, secretName = "default"): P
     process.exit(1);
   }
 
-  const identity = await loadIdentityFromEnvOrPrompt("AGENT_PRIV_KEY not set. Enter private key: ");
-  const handle = await startProxy(identity, upstreamBaseUrl, secretName, port);
+  const context = await loadOwnerContextFromEnvOrPrompt("AGENT_PRIV_KEY not set. Enter private key: ");
+  const secretValue = await exportSecretPlaintext(context, secretName);
+  if (!secretValue) {
+    console.error(`❌ Error: Secret name "${secretName}" not found in vault.`);
+    process.exit(1);
+  }
+
+  const handle = await startProxy(secretValue, upstreamBaseUrl, secretName, port);
 
   console.log("c-bio local auth proxy started");
   console.log(`Upstream:   ${handle.upstreamBaseUrl}`);

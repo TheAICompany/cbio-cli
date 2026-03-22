@@ -44,13 +44,14 @@ In the era of 10,000 parallel agents, passing raw keys is an architectural failu
 ### Key Features
 - **🔐 AES-256-GCM Vault**: 100% offline, encrypted at rest. No cloud backdoors.
 - **🛡️ Physical Isolation**: Agents perform requests without ever seeing plaintext secrets.
+- **🚧 KMS-Style Black-Box Vault (planned)**: moving toward a vault with no secret export, only proof-based operations.
 - **⚡ Atomic Auto-Save**: Real-time, encrypted disk writes on every credential change.
 - **🧩 Recursive Identity**: Issue and govern sub-identities with a master authority.
 - **📜 Tamper-Evident Logs**: Audit every secret access with local activity logs.
 
 ### The Golden Rule
 > **Agent logic should receive only the `agent` handle, never the `identity`.**
-> If your agent process can read the raw private key (`AGENT_PRIV_KEY`), nothing can protect you from that process. Always separate the **Authority** (Identity) from the **Execution** (Agent).
+> If your agent process can read the raw private key (`AGENT_PRIV_KEY`) for the current identity, nothing can protect you from that process. Always separate the **Authority** (Identity) from the **Execution** (Agent).
 
 ---
 
@@ -65,7 +66,12 @@ npm install @the-ai-company/cbio-cli
 ```bash
 npx @the-ai-company/cbio-cli init
 ```
-*Creates your root identity. Save the Private Key as `AGENT_PRIV_KEY`.*
+*Creates an identity and prints `AGENT_PUB_KEY`, `AGENT_PRIV_KEY`, `OWNER_ID`, `AGENT_ID`, and `VAULT_ID`.*
+`OWNER_ID` is the owner identity derived from that keypair.
+`AGENT_ID` is the default agent identity derived from the same keypair. It does not mean `init` created a separate running agent for you.
+
+Security note: do not run `init` inside IDE terminals or tools that may record terminal output. Some IDEs can persist command output, which can leak the printed private key. Prefer a regular system terminal for this step.
+After `init` succeeds, save the private key immediately and close the current session as soon as you are done with it.
 
 After installation, the local binary name is still:
 
@@ -78,6 +84,8 @@ cbio init
 ```bash
 export AGENT_PRIV_KEY=your_private_key_here
 ```
+
+`AGENT_PRIV_KEY` means the private key for the identity used by the current shell or process. In a child-agent environment, that would be the child agent's own identity key.
 
 ### 4. Add a secret
 
@@ -111,12 +119,12 @@ CBIO keeps secrets in the local vault and injects auth at request time, so your 
 - Local binary: `cbio`
 - Core flow: `cbio init`, `cbio tui`, `cbio proxy`
 - `cbio init`: create your identity and print the keys you need to save
-- `cbio tui`: add, inspect, and remove secrets in the local vault
+- `cbio tui`: open the owner console for vault, keys, agents, permissions, and audit
 - `cbio proxy <upstream-url> [secret-name]`: expose a local endpoint that injects auth from the vault
 - Auxiliary commands: `cbio agent-id`, `cbio get`, `cbio delete`
-- `cbio agent-id`: print the root agent ID for a private key
+- `cbio agent-id`: print the derived agent ID for a private key
 - `cbio get`: print a secret in plaintext for last-mile admin/debug work
-- `cbio delete`: delete a secret after confirmation
+- `cbio delete`: currently unavailable with the runtime 1.13 public API
 
 ---
 

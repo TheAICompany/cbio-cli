@@ -11,14 +11,14 @@ function printUsage(): void {
   console.log("");
   console.log("Core Commands:");
   console.log("  cbio init                   Create a new identity");
-  console.log("  cbio tui                    Manage secrets in the local vault");
+  console.log("  cbio tui                    Open the owner console");
   console.log("  cbio proxy <upstream-url> [secret-name]");
   console.log("                              Start a local auth proxy");
   console.log("");
   console.log("Advanced Commands:");
-  console.log("  cbio agent-id               Print the root agent ID for a private key");
+  console.log("  cbio agent-id               Print the derived agent ID for a private key");
   console.log("  cbio get <secret-name>      Print a secret in plaintext");
-  console.log("  cbio delete <secret-name>   Delete a secret after confirmation");
+  console.log("  cbio delete <secret-name>   Not available in runtime 1.13");
 }
 
 export async function runCli(argv = process.argv): Promise<void> {
